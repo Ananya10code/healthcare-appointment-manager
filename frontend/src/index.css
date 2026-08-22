@@ -1,0 +1,65 @@
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #f5f7fa;
+  color: #1a1a1a;
+}
+a { color: #2563eb; }
+.container { max-width: 960px; margin: 0 auto; padding: 24px; }
+.card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.btn {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.btn:hover { background: #1d4ed8; }
+.btn.secondary { background: #64748b; }
+.btn.danger { background: #dc2626; }
+input, select, textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+label { font-weight: 600; font-size: 13px; display: block; margin-bottom: 4px; }
+nav {
+  background: #fff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 12px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+nav .links a { margin-right: 16px; text-decoration: none; font-weight: 500; }
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.badge.High { background: #fee2e2; color: #b91c1c; }
+.badge.Medium { background: #fef9c3; color: #a16207; }
+.badge.Low { background: #dcfce7; color: #15803d; }
+.slot-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.slot-btn {
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+}
+.slot-btn:hover { background: #eff6ff; border-color: #2563eb; }
