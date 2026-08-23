@@ -1,0 +1,126 @@
+// Prisma schema for Healthcare Appointment & Follow-up Manager
+// Using SQLite by default for easy local/free-tier hosting
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  role          String
+  name          String
+  phone         String?
+  createdAt     DateTime  @default(now())
+
+  doctorProfile       DoctorProfile?    @relation
+  patientAppointments Appointment[]      @relation("PatientAppointments")
+  googleTokens        GoogleToken?
+}
+
+model DoctorProfile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id])
+  specialisation String
+  slotDurationMin Int      @default(30)
+  bio            String?
+
+  workingHours   WorkingHour[]
+  leaves         DoctorLeave[]
+  appointments   Appointment[] @relation("DoctorAppointments")
+}
+
+// Recurring weekly availability, e.g. Mon 09:00-17:00
+model WorkingHour {
+  id          String        @id @default(cuid())
+  doctorId    String
+  doctor      DoctorProfile @relation(fields: [doctorId], references: [id])
+  dayOfWeek   Int           // 0=Sunday .. 6=Saturday
+  startTime   String        // "09:00"
+  endTime     String        // "17:00"
+}
+
+model DoctorLeave {
+  id          String        @id @default(cuid())
+  doctorId    String
+  doctor      DoctorProfile @relation(fields: [doctorId], references: [id])
+  date        DateTime      // whole-day leave (date-only, time ignored)
+  reason      String?
+  createdAt   DateTime      @default(now())
+}
+
+model Appointment {
+  id              String        @id @default(cuid())
+  patientId       String
+  patient         User          @relation("PatientAppointments", fields: [patientId], references: [id])
+  doctorId        String
+  doctor          DoctorProfile @relation("DoctorAppointments", fields: [doctorId], references: [id])
+
+  startTime       DateTime
+  endTime         DateTime
+  status          String        @default("HELD")
+  holdExpiresAt   DateTime?     // slot-hold mechanism
+
+  symptomText     String?
+  preVisitSummary String?       // JSON string: { urgency, chiefComplaint, questions[] }
+  preVisitUrgency String?
+
+  doctorNotes         String?
+  prescription        String?
+  postVisitSummary    String?   // JSON string: patient-friendly summary + medication schedule
+
+  googleEventIdPatient String?
+  googleEventIdDoctor  String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  reminders       MedicationReminder[]
+  notifications   NotificationLog[]
+
+  // A doctor cannot have two BOOKED/HELD appointments overlapping in time.
+  // Enforced at the application layer.
+  @@index([doctorId, startTime, endTime, status])
+}
+
+model MedicationReminder {
+  id             String      @id @default(cuid())
+  appointmentId  String
+  appointment    Appointment @relation(fields: [appointmentId], references: [id])
+  medicationName String
+  scheduleCron   String      // e.g. "0 9,21 * * *"
+  nextRunAt      DateTime
+  active         Boolean     @default(true)
+  createdAt      DateTime    @default(now())
+}
+
+// Records every notification attempt for reliability/auditing and retry logic
+model NotificationLog {
+  id             String      @id @default(cuid())
+  appointmentId  String
+  appointment    Appointment @relation(fields: [appointmentId], references: [id])
+  channel        String      // "EMAIL" | "CALENDAR"
+  type           String      // "BOOKING_CONFIRMATION" | "REMINDER" | "CANCELLATION" | "LEAVE_CONFLICT"
+  recipient      String
+  status         String      // "PENDING" | "SENT" | "FAILED"
+  attempts       Int         @default(0)
+  lastError      String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model GoogleToken {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id])
+  accessToken   String
+  refreshToken  String
+  expiryDate    DateTime
+}
